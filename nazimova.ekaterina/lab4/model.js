@@ -71,7 +71,7 @@ function findUsersWithFriend(users, friendId) {
   return users.filter((user) => user.friends.includes(friendId));
 }
 
-function getUsersWithFriendsMoreThan(users, minCount) {
+function findUsersAboveFriendCount(users, minCount) {
   if (!Array.isArray(users)) {
     throw new TypeError('users must be an array');
   }
@@ -94,6 +94,7 @@ export {
   getUniqueFriends,
   findUsersWithFriend,
   findUsersWithFriend as getUsersWithCommonFriend,
-  getUsersWithFriendsMoreThan,
+  findUsersAboveFriendCount,
+  findUsersAboveFriendCount as getUsersWithFriendsMoreThan,
   getUsersWithoutFriends,
 };

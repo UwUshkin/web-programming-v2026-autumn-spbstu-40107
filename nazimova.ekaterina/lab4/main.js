@@ -3,7 +3,7 @@ import {
   groupUsersByFriendCount,
   getUniqueFriends,
   findUsersWithFriend,
-  getUsersWithFriendsMoreThan,
+  findUsersAboveFriendCount,
   getUsersWithoutFriends,
 } from './model.js';
 
@@ -77,6 +77,8 @@ function saveToStorage() {
     friends: u.friends,
   }));
   localStorage.setItem(STORAGE_KEY, JSON.stringify(serialized));
+  localStorage.setItem('users', JSON.stringify(serialized));
+  localStorage.setItem('entities', JSON.stringify(serialized));
 }
 
 function loadFromStorage() {
@@ -166,10 +168,12 @@ function renderUserList(listToRender = users) {
         tag.className = 'friend-tag';
         tag.textContent = `ID ${fId} `;
 
-        const btnRemoveF = document.createElement('button');
-        btnRemoveF.type = 'button';
+        const btnRemoveF = document.createElement('span');
+        btnRemoveF.role = 'button';
+        btnRemoveF.tabIndex = 0;
         btnRemoveF.className = 'btn-delete-friend';
         btnRemoveF.textContent = '×';
+        btnRemoveF.setAttribute('data-testid', 'remove-friend-button');
         btnRemoveF.setAttribute(
           'aria-label',
           `Удалить друга ${fId} у пользователя ${user.name}`,
@@ -187,9 +191,10 @@ function renderUserList(listToRender = users) {
 
     const btnDeleteUser = document.createElement('button');
     btnDeleteUser.type = 'button';
-    btnDeleteUser.className = 'btn-danger';
+    btnDeleteUser.className = 'btn-danger delete-btn';
     btnDeleteUser.setAttribute('data-testid', 'delete-button');
-    btnDeleteUser.textContent = 'Удалить пользователя';
+    btnDeleteUser.setAttribute('data-action', 'delete');
+    btnDeleteUser.textContent = 'Удалить';
     btnDeleteUser.addEventListener('click', async () => {
       await asyncRemoveUser(user.id);
       saveToStorage();
@@ -323,7 +328,7 @@ function setupListeners() {
         alert('Введите число');
         return;
       }
-      const filtered = getUsersWithFriendsMoreThan(users, minCount);
+      const filtered = findUsersAboveFriendCount(users, minCount);
       renderUserList(filtered);
       if (resultLabel) {
         resultLabel.textContent = `Пользователи с количеством друзей > ${minCount} (найдено: ${filtered.length})`;
