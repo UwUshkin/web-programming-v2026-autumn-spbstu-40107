@@ -11,6 +11,13 @@ const STORAGE_KEY = 'users_lab4_storage';
 
 let users = [];
 
+function showError(message) {
+  const label = document.getElementById('analytics-result');
+  if (label) {
+    label.textContent = message;
+  }
+}
+
 function asyncAddUser(id, name) {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
@@ -50,8 +57,12 @@ function asyncAddFriend(userId, friendId) {
         reject(new Error('Пользователь не найден'));
         return;
       }
-      user.addFriend(friendId);
-      resolve(user);
+      try {
+        user.addFriend(friendId);
+        resolve(user);
+      } catch (err) {
+        reject(err);
+      }
     }, 50);
   });
 }
@@ -185,11 +196,8 @@ function renderUserList(listToRender = users) {
 
     const btnDeleteUser = document.createElement('button');
     btnDeleteUser.type = 'button';
-    btnDeleteUser.className = 'btn-danger delete-btn delete-button';
-    btnDeleteUser.setAttribute('data-action', 'delete');
+    btnDeleteUser.className = 'btn-danger delete-btn';
     btnDeleteUser.setAttribute('data-testid', 'delete-btn');
-    btnDeleteUser.setAttribute('data-delete', '');
-    btnDeleteUser.setAttribute('name', 'delete');
     btnDeleteUser.setAttribute('aria-label', 'Удалить');
     btnDeleteUser.textContent = 'Удалить';
     btnDeleteUser.addEventListener('click', async () => {
@@ -236,8 +244,9 @@ function setupListeners() {
         updateUI();
         idInput.value = '';
         nameInput.value = '';
+        showError('');
       } catch (err) {
-        alert(err.message);
+        showError(err.message);
       }
     });
   }
@@ -256,8 +265,9 @@ function setupListeners() {
         saveToStorage();
         updateUI();
         friendInput.value = '';
+        showError('');
       } catch (err) {
-        alert(err.message);
+        showError(err.message);
       }
     });
   }
@@ -305,7 +315,7 @@ function setupListeners() {
       const input = document.getElementById('filter-common-friend-id');
       const friendId = Number.parseInt(input.value, 10);
       if (Number.isNaN(friendId)) {
-        alert('Введите корректный ID друга');
+        showError('Введите корректный ID друга');
         return;
       }
       const withFriend = findUsersWithFriend(users, friendId);
@@ -322,7 +332,7 @@ function setupListeners() {
       const input = document.getElementById('filter-min-friends-count');
       const minCount = Number.parseInt(input.value, 10);
       if (Number.isNaN(minCount)) {
-        alert('Введите число');
+        showError('Введите число');
         return;
       }
       const filtered = findUsersAboveFriendCount(users, minCount);
