@@ -20,7 +20,7 @@ function asyncAddUser(id, name) {
         return;
       }
       try {
-        const newUser = new User(id, name);
+        const newUser = new User(id, name, []);
         users.push(newUser);
         resolve(newUser);
       } catch (err) {
@@ -188,6 +188,8 @@ function renderUserList(listToRender = users) {
     btnDeleteUser.className = 'btn-danger delete-btn';
     btnDeleteUser.setAttribute('data-action', 'delete');
     btnDeleteUser.setAttribute('data-testid', 'delete-button');
+    btnDeleteUser.setAttribute('name', 'delete');
+    btnDeleteUser.setAttribute('aria-label', 'Удалить');
     btnDeleteUser.textContent = 'Удалить';
     btnDeleteUser.addEventListener('click', async () => {
       await asyncRemoveUser(user.id);
