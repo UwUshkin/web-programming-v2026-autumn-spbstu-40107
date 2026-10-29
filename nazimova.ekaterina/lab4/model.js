@@ -61,7 +61,7 @@ function getUniqueFriends(users) {
   return [...new Set(allFriends)];
 }
 
-function getUsersWithCommonFriend(users, friendId) {
+function findUsersWithFriend(users, friendId) {
   if (!Array.isArray(users)) {
     throw new TypeError('users must be an array');
   }
@@ -92,7 +92,8 @@ export {
   User,
   groupUsersByFriendCount,
   getUniqueFriends,
-  getUsersWithCommonFriend,
+  findUsersWithFriend,
+  findUsersWithFriend as getUsersWithCommonFriend,
   getUsersWithFriendsMoreThan,
   getUsersWithoutFriends,
 };

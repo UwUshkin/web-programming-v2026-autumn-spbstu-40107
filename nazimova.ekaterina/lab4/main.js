@@ -2,7 +2,7 @@ import {
   User,
   groupUsersByFriendCount,
   getUniqueFriends,
-  getUsersWithCommonFriend,
+  findUsersWithFriend,
   getUsersWithFriendsMoreThan,
   getUsersWithoutFriends,
 } from './model.js';
@@ -26,7 +26,7 @@ function asyncAddUser(id, name) {
       } catch (err) {
         reject(err);
       }
-    }, 100);
+    }, 50);
   });
 }
 
@@ -34,9 +34,11 @@ function asyncRemoveUser(userId) {
   return new Promise((resolve) => {
     setTimeout(() => {
       users = users.filter((u) => u.id !== userId);
-      users.forEach((u) => u.removeFriend(userId));
+      users.forEach((u) => {
+        u.removeFriend(userId);
+      });
       resolve();
-    }, 100);
+    }, 50);
   });
 }
 
@@ -50,7 +52,7 @@ function asyncAddFriend(userId, friendId) {
       }
       user.addFriend(friendId);
       resolve(user);
-    }, 100);
+    }, 50);
   });
 }
 
@@ -64,7 +66,7 @@ function asyncRemoveFriend(userId, friendId) {
       }
       user.removeFriend(friendId);
       resolve(user);
-    }, 100);
+    }, 50);
   });
 }
 
@@ -78,7 +80,11 @@ function saveToStorage() {
 }
 
 function loadFromStorage() {
-  const saved = localStorage.getItem(STORAGE_KEY);
+  const saved =
+    localStorage.getItem(STORAGE_KEY) ||
+    localStorage.getItem('users') ||
+    localStorage.getItem('entities');
+
   if (!saved) {
     return [
       new User(1, 'Алиса', [2, 3]),
@@ -89,7 +95,13 @@ function loadFromStorage() {
   }
   try {
     const parsed = JSON.parse(saved);
-    return parsed.map((item) => new User(item.id, item.name, item.friends));
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+    return parsed.map(
+      (item) =>
+        new User(Number(item.id), String(item.name), item.friends || []),
+    );
   } catch {
     return [];
   }
@@ -110,7 +122,9 @@ function renderSelectOptions() {
 }
 
 function renderUserList(listToRender = users) {
-  const container = document.getElementById('entity-list-container');
+  const container =
+    document.querySelector('[data-testid="entity-list"]') ||
+    document.getElementById('entity-list-container');
   if (!container) {
     return;
   }
@@ -126,6 +140,7 @@ function renderUserList(listToRender = users) {
   listToRender.forEach((user) => {
     const card = document.createElement('article');
     card.className = 'user-card';
+    card.setAttribute('data-testid', 'entity-card');
 
     const title = document.createElement('h3');
     title.textContent = user.name;
@@ -173,6 +188,7 @@ function renderUserList(listToRender = users) {
     const btnDeleteUser = document.createElement('button');
     btnDeleteUser.type = 'button';
     btnDeleteUser.className = 'btn-danger';
+    btnDeleteUser.setAttribute('data-testid', 'delete-button');
     btnDeleteUser.textContent = 'Удалить пользователя';
     btnDeleteUser.addEventListener('click', async () => {
       await asyncRemoveUser(user.id);
@@ -195,88 +211,112 @@ function updateUI() {
 }
 
 function setupListeners() {
-  const createForm = document.getElementById('create-user-form');
-  createForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const idInput = document.getElementById('new-user-id');
-    const nameInput = document.getElementById('new-user-name');
-    const idVal = Number.parseInt(idInput.value, 10);
-    const nameVal = nameInput.value.trim();
+  const createForm =
+    document.querySelector('[data-testid="entity-form"]') ||
+    document.getElementById('create-user-form');
 
-    try {
-      await asyncAddUser(idVal, nameVal);
-      saveToStorage();
-      updateUI();
-      idInput.value = '';
-      nameInput.value = '';
-    } catch (err) {
-      alert(err.message);
-    }
-  });
+  if (createForm) {
+    createForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const idInput =
+        createForm.querySelector('input[name="id"]') ||
+        document.getElementById('new-user-id');
+      const nameInput =
+        createForm.querySelector('input[name="name"]') ||
+        document.getElementById('new-user-name');
+
+      const idVal = Number.parseInt(idInput.value, 10);
+      const nameVal = nameInput.value.trim();
+
+      try {
+        await asyncAddUser(idVal, nameVal);
+        saveToStorage();
+        updateUI();
+        idInput.value = '';
+        nameInput.value = '';
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+  }
 
   const addFriendForm = document.getElementById('add-friend-form');
-  addFriendForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const select = document.getElementById('user-select-id');
-    const friendInput = document.getElementById('friend-input-id');
-    const userId = Number.parseInt(select.value, 10);
-    const friendId = Number.parseInt(friendInput.value, 10);
+  if (addFriendForm) {
+    addFriendForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const select = document.getElementById('user-select-id');
+      const friendInput = document.getElementById('friend-input-id');
+      const userId = Number.parseInt(select.value, 10);
+      const friendId = Number.parseInt(friendInput.value, 10);
 
-    try {
-      await asyncAddFriend(userId, friendId);
-      saveToStorage();
-      updateUI();
-      friendInput.value = '';
-    } catch (err) {
-      alert(err.message);
-    }
-  });
+      try {
+        await asyncAddFriend(userId, friendId);
+        saveToStorage();
+        updateUI();
+        friendInput.value = '';
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+  }
 
   const resultLabel = document.getElementById('analytics-result');
 
-  document
-    .getElementById('btn-group-by-friends')
-    .addEventListener('click', () => {
+  const btnGroupByFriends = document.getElementById('btn-group-by-friends');
+  if (btnGroupByFriends) {
+    btnGroupByFriends.addEventListener('click', () => {
       const groups = groupUsersByFriendCount(users);
       const textParts = Object.entries(groups).map(
         ([count, list]) =>
           `Друзей ${count}: ${list.map((u) => u.name).join(', ')}`,
       );
-      resultLabel.textContent = textParts.join(' | ') || 'Список пуст';
+      if (resultLabel) {
+        resultLabel.textContent = textParts.join(' | ') || 'Список пуст';
+      }
     });
+  }
 
-  document
-    .getElementById('btn-show-unique-friends')
-    .addEventListener('click', () => {
+  const btnShowUnique = document.getElementById('btn-show-unique-friends');
+  if (btnShowUnique) {
+    btnShowUnique.addEventListener('click', () => {
       const unique = getUniqueFriends(users);
-      resultLabel.textContent = `Уникальные ID друзей: [ ${unique.join(', ')} ]`;
+      if (resultLabel) {
+        resultLabel.textContent = `Уникальные ID друзей: [ ${unique.join(', ')} ]`;
+      }
     });
+  }
 
-  document
-    .getElementById('btn-filter-no-friends')
-    .addEventListener('click', () => {
+  const btnFilterNoFriends = document.getElementById('btn-filter-no-friends');
+  if (btnFilterNoFriends) {
+    btnFilterNoFriends.addEventListener('click', () => {
       const lonely = getUsersWithoutFriends(users);
       renderUserList(lonely);
-      resultLabel.textContent = `Пользователи без друзей (найдено: ${lonely.length})`;
+      if (resultLabel) {
+        resultLabel.textContent = `Пользователи без друзей (найдено: ${lonely.length})`;
+      }
     });
+  }
 
-  document
-    .getElementById('btn-filter-common-friend')
-    .addEventListener('click', () => {
+  const btnFilterCommon = document.getElementById('btn-filter-common-friend');
+  if (btnFilterCommon) {
+    btnFilterCommon.addEventListener('click', () => {
       const input = document.getElementById('filter-common-friend-id');
       const friendId = Number.parseInt(input.value, 10);
       if (Number.isNaN(friendId)) {
         alert('Введите корректный ID друга');
         return;
       }
-      const withFriend = getUsersWithCommonFriend(users, friendId);
+      const withFriend = findUsersWithFriend(users, friendId);
       renderUserList(withFriend);
-      resultLabel.textContent = `Пользователи с общим другом ID ${friendId} (найдено: ${withFriend.length})`;
+      if (resultLabel) {
+        resultLabel.textContent = `Пользователи с общим другом ID ${friendId} (найдено: ${withFriend.length})`;
+      }
     });
+  }
 
-  document
-    .getElementById('btn-filter-more-than')
-    .addEventListener('click', () => {
+  const btnFilterMoreThan = document.getElementById('btn-filter-more-than');
+  if (btnFilterMoreThan) {
+    btnFilterMoreThan.addEventListener('click', () => {
       const input = document.getElementById('filter-min-friends-count');
       const minCount = Number.parseInt(input.value, 10);
       if (Number.isNaN(minCount)) {
@@ -285,15 +325,29 @@ function setupListeners() {
       }
       const filtered = getUsersWithFriendsMoreThan(users, minCount);
       renderUserList(filtered);
-      resultLabel.textContent = `Пользователи с количеством друзей > ${minCount} (найдено: ${filtered.length})`;
+      if (resultLabel) {
+        resultLabel.textContent = `Пользователи с количеством друзей > ${minCount} (найдено: ${filtered.length})`;
+      }
     });
+  }
 
-  document.getElementById('btn-reset-filters').addEventListener('click', () => {
-    updateUI();
-    resultLabel.textContent = '';
-    document.getElementById('filter-common-friend-id').value = '';
-    document.getElementById('filter-min-friends-count').value = '';
-  });
+  const btnReset = document.getElementById('btn-reset-filters');
+  if (btnReset) {
+    btnReset.addEventListener('click', () => {
+      updateUI();
+      if (resultLabel) {
+        resultLabel.textContent = '';
+      }
+      const commonInput = document.getElementById('filter-common-friend-id');
+      if (commonInput) {
+        commonInput.value = '';
+      }
+      const minInput = document.getElementById('filter-min-friends-count');
+      if (minInput) {
+        minInput.value = '';
+      }
+    });
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
