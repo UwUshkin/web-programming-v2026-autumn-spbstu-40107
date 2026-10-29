@@ -197,9 +197,8 @@ function renderUserList(listToRender = users) {
     const btnDeleteUser = document.createElement('button');
     btnDeleteUser.type = 'button';
     btnDeleteUser.className = 'btn-danger delete-btn';
-    btnDeleteUser.setAttribute('data-testid', 'delete-btn');
-    btnDeleteUser.setAttribute('aria-label', 'Удалить');
-    btnDeleteUser.textContent = 'Удалить';
+    btnDeleteUser.setAttribute('data-testid', 'delete-entity');
+    btnDeleteUser.textContent = 'Удалить пользователя';
     btnDeleteUser.addEventListener('click', async () => {
       await asyncRemoveUser(user.id);
       saveToStorage();
