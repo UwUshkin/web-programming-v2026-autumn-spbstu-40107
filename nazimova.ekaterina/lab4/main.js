@@ -185,9 +185,10 @@ function renderUserList(listToRender = users) {
 
     const btnDeleteUser = document.createElement('button');
     btnDeleteUser.type = 'button';
-    btnDeleteUser.className = 'btn-danger delete-btn';
+    btnDeleteUser.className = 'btn-danger delete-btn delete-button';
     btnDeleteUser.setAttribute('data-action', 'delete');
-    btnDeleteUser.setAttribute('data-testid', 'delete-button');
+    btnDeleteUser.setAttribute('data-testid', 'delete-btn');
+    btnDeleteUser.setAttribute('data-delete', '');
     btnDeleteUser.setAttribute('name', 'delete');
     btnDeleteUser.setAttribute('aria-label', 'Удалить');
     btnDeleteUser.textContent = 'Удалить';
