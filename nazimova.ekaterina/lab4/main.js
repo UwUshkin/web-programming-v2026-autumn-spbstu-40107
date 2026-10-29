@@ -4,7 +4,7 @@ import {
   getUniqueFriends,
   findUsersWithFriend,
   findUsersAboveFriendCount,
-  getUsersWithoutFriends,
+  findUsersWithoutFriends,
 } from './model.js';
 
 const STORAGE_KEY = 'users_lab4_storage';
@@ -169,15 +169,9 @@ function renderUserList(listToRender = users) {
         tag.textContent = `ID ${fId} `;
 
         const btnRemoveF = document.createElement('span');
-        btnRemoveF.role = 'button';
-        btnRemoveF.tabIndex = 0;
         btnRemoveF.className = 'btn-delete-friend';
         btnRemoveF.textContent = '×';
-        btnRemoveF.setAttribute('data-testid', 'remove-friend-button');
-        btnRemoveF.setAttribute(
-          'aria-label',
-          `Удалить друга ${fId} у пользователя ${user.name}`,
-        );
+        btnRemoveF.setAttribute('aria-label', `Удалить связь с ${fId}`);
         btnRemoveF.addEventListener('click', async () => {
           await asyncRemoveFriend(user.id, fId);
           saveToStorage();
@@ -192,8 +186,8 @@ function renderUserList(listToRender = users) {
     const btnDeleteUser = document.createElement('button');
     btnDeleteUser.type = 'button';
     btnDeleteUser.className = 'btn-danger delete-btn';
-    btnDeleteUser.setAttribute('data-testid', 'delete-button');
     btnDeleteUser.setAttribute('data-action', 'delete');
+    btnDeleteUser.setAttribute('data-testid', 'delete-button');
     btnDeleteUser.textContent = 'Удалить';
     btnDeleteUser.addEventListener('click', async () => {
       await asyncRemoveUser(user.id);
@@ -294,7 +288,7 @@ function setupListeners() {
   const btnFilterNoFriends = document.getElementById('btn-filter-no-friends');
   if (btnFilterNoFriends) {
     btnFilterNoFriends.addEventListener('click', () => {
-      const lonely = getUsersWithoutFriends(users);
+      const lonely = findUsersWithoutFriends(users);
       renderUserList(lonely);
       if (resultLabel) {
         resultLabel.textContent = `Пользователи без друзей (найдено: ${lonely.length})`;
