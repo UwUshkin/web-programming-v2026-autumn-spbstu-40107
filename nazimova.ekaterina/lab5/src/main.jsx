@@ -51,43 +51,37 @@ function Modal({isOpen, onClose, book}) {
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen || !book) {
-    return null;
-  }
-
   return (
     <div
       className="modal-overlay"
-      data-testid="modal-overlay"
+      data-testid="book-modal"
+      style={{display: isOpen ? 'flex' : 'none'}}
       onClick={onClose}
     >
-      <div
-        className="modal-content"
-        data-testid="modal"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <button
           className="modal-close-btn"
-          data-testid="modal-close"
           onClick={onClose}
           aria-label="Закрыть"
         >
           &times;
         </button>
-        <div className="modal-body">
-          <img
-            src={book.cover}
-            alt={`Обложка ${book.title}`}
-            className="modal-cover"
-          />
-          <div className="modal-info">
-            <h2>{book.title}</h2>
-            <p className="modal-author">
-              <strong>Автор:</strong> {book.author}
-            </p>
-            <p className="modal-desc">{book.description}</p>
+        {book && (
+          <div className="modal-body">
+            <img
+              src={book.cover}
+              alt={`Обложка ${book.title}`}
+              className="modal-cover"
+            />
+            <div className="modal-info">
+              <h2>{book.title}</h2>
+              <p className="modal-author">
+                <strong>Автор:</strong> {book.author}
+              </p>
+              <p className="modal-desc">{book.description}</p>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
