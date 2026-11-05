@@ -61,6 +61,7 @@ function Modal({isOpen, onClose, book}) {
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <button
           className="modal-close-btn"
+          data-testid="modal-close"
           onClick={onClose}
           aria-label="Закрыть"
         >
