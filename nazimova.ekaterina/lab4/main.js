@@ -38,13 +38,17 @@ function asyncAddUser(id, name) {
 }
 
 function asyncRemoveUser(userId) {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     setTimeout(() => {
       users = users.filter((u) => u.id !== userId);
-      users.forEach((u) => {
-        u.removeFriend(userId);
-      });
-      resolve();
+      try {
+        users.forEach((u) => {
+          u.removeFriend(userId);
+        });
+        resolve();
+      } catch (err) {
+        reject(err);
+      }
     }, 50);
   });
 }
@@ -75,8 +79,12 @@ function asyncRemoveFriend(userId, friendId) {
         reject(new Error('Пользователь не найден'));
         return;
       }
-      user.removeFriend(friendId);
-      resolve(user);
+      try {
+        user.removeFriend(friendId);
+        resolve(user);
+      } catch (err) {
+        reject(err);
+      }
     }, 50);
   });
 }
@@ -184,9 +192,13 @@ function renderUserList(listToRender = users) {
         btnRemoveF.textContent = '×';
         btnRemoveF.setAttribute('aria-label', `Удалить связь с ${fId}`);
         btnRemoveF.addEventListener('click', async () => {
-          await asyncRemoveFriend(user.id, fId);
-          saveToStorage();
-          updateUI();
+          try {
+            await asyncRemoveFriend(user.id, fId);
+            saveToStorage();
+            updateUI();
+          } catch (err) {
+            showError(err.message);
+          }
         });
 
         tag.appendChild(btnRemoveF);
@@ -200,9 +212,13 @@ function renderUserList(listToRender = users) {
     btnDeleteUser.setAttribute('data-testid', 'delete-entity');
     btnDeleteUser.textContent = 'Удалить пользователя';
     btnDeleteUser.addEventListener('click', async () => {
-      await asyncRemoveUser(user.id);
-      saveToStorage();
-      updateUI();
+      try {
+        await asyncRemoveUser(user.id);
+        saveToStorage();
+        updateUI();
+      } catch (err) {
+        showError(err.message);
+      }
     });
 
     card.appendChild(title);
