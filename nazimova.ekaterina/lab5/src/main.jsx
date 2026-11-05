@@ -2,12 +2,15 @@ import React, {useState, useEffect} from 'react';
 import {createRoot} from 'react-dom/client';
 import './styles.css';
 
+const placeholderImage =
+  "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='300'%3E%3Crect width='100%25' height='100%25' fill='%23cccccc'/%3E%3Ctext x='50%25' y='50%25' fill='%23666666' font-family='sans-serif' font-size='16' text-anchor='middle' dominant-baseline='middle'%3EОбложка%3C/text%3E%3C/svg%3E";
+
 const BOOKS = [
   {
     id: 1,
     title: 'Властелин колец',
     author: 'Дж. Р. Р. Толкин',
-    cover: 'https://via.placeholder.com/200x300?text=Властелин+колец',
+    cover: placeholderImage,
     description:
       'Эпический роман-эпопея в жанре фэнтези о походе Братства Кольца для уничтожения Кольца Всевластья.',
   },
@@ -15,7 +18,7 @@ const BOOKS = [
     id: 2,
     title: 'Хоббит, или Туда и обратно',
     author: 'Дж. Р. Р. Толкин',
-    cover: 'https://via.placeholder.com/200x300?text=Хоббит',
+    cover: placeholderImage,
     description:
       'Увлекательная повесть о путешествии хоббита Бильбо Бэггинса за сокровищами гномов к Одинокой Горе.',
   },
@@ -23,7 +26,7 @@ const BOOKS = [
     id: 3,
     title: 'Путешествие на Запад',
     author: 'У Чэнъэнь',
-    cover: 'https://via.placeholder.com/200x300?text=Путешествие+на+Запад',
+    cover: placeholderImage,
     description:
       'Классический китайский роман о паломничестве монаха в Индию и приключениях Царя обезьян Сунь Укуна.',
   },
@@ -53,10 +56,19 @@ function Modal({isOpen, onClose, book}) {
   }
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="modal-overlay"
+      data-testid="modal-overlay"
+      onClick={onClose}
+    >
+      <div
+        className="modal-content"
+        data-testid="modal"
+        onClick={(e) => e.stopPropagation()}
+      >
         <button
           className="modal-close-btn"
+          data-testid="modal-close"
           onClick={onClose}
           aria-label="Закрыть"
         >
@@ -106,6 +118,7 @@ function App() {
           <article
             key={book.id}
             className="book-card"
+            data-testid="book-card"
             onClick={() => openModal(book)}
           >
             <img src={book.cover} alt={book.title} className="book-cover" />
